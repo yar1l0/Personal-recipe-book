@@ -29,6 +29,11 @@
 
 ```bash
 $ npm install
+docker-compose up -d
+cp .env.example .env
+npm run prisma:generate
+npm run prisma:migrate
+npm run start:dev
 ```
 
 ## Compile and run the project
