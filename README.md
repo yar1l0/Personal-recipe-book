@@ -23,7 +23,7 @@ recipe-book/
 ### Frontend
 - **Next.js** 14 (App Router)
 - **TypeScript**
-- **NextUI** - UI бібліотека
+- **HeroUI** - UI бібліотека
 - **Tailwind CSS** - Стилізація
 - **Zustand** - State management
 - **Axios** - HTTP клієнт
@@ -55,8 +55,6 @@ recipe-book/
 - Редагування даних
 - Зміна пароля
 
-## Швидкий старт
-
 ### Вимоги
 - Node.js 18+
 - Docker & Docker Compose
@@ -66,7 +64,6 @@ recipe-book/
 
 ```bash
 git clone <repository-url>
-cd recipe-book
 ```
 
 ### 2. Запуск Backend
@@ -78,7 +75,7 @@ cd backend
 npm install
 
 # Створити .env файл
-echo "DATABASE_URL=postgresql://root:password@localhost:5432/backend?schema=public
+DATABASE_URL="postgresql://testuser:testpass@localhost:5434/backend?schema=public"
 JWT_SECRET=c7b9d4a8f2e1a6d3e9f47c1b82a4d7f0c1e9b3d4a7f2e6c9b5d8f3a2c7e1d9f4
 JWT_EXPIRES_IN=7d
 PORT=3001" > .env
@@ -196,8 +193,8 @@ Frontend буде доступний на `http://localhost:3000`
 
 ### Backend (.env)
 ```env
-DATABASE_URL=postgresql://root:password@localhost:5432/backend?schema=public
-JWT_SECRET=your-secret-key
+DATABASE_URL="postgresql://testuser:testpass@localhost:5434/backend?schema=public"
+JWT_SECRET=c7b9d4a8f2e1a6d3e9f47c1b82a4d7f0c1e9b3d4a7f2e6c9b5d8f3a2c7e1d9f4
 JWT_EXPIRES_IN=7d
 PORT=3001
 ```
@@ -267,10 +264,4 @@ types/
 └── index.ts           # TypeScript типи
 ```
 
-## Ліцензія
 
-MIT
-
-## Автор
-
-Aroslav Roslik

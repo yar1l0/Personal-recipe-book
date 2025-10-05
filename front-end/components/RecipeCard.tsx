@@ -12,11 +12,12 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
   return (
     <a href={`/recipes/${recipe.id}`}    >
       <Card isPressable isHoverable className="w-full">
-        <CardBody className="p-0">
+        <CardBody className="p-0 w-full ">
           <Image
             src={getImageUrl(recipe.photo)}
             alt={recipe.title}
-            className="w-full h-48 object-cover"
+            removeWrapper
+            className="w-full h-48 object-cover max-w-full "
           />
         </CardBody>
         <CardFooter className="flex flex-col items-start gap-2">

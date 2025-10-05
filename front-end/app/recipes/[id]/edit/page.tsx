@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import {
   Card,
   CardBody,
@@ -12,10 +12,11 @@ import {
   Textarea,
 } from '@heroui/react';
 import { recipesApi } from '@/lib/api';
-import { Category, Difficulty } from '@/types';
+import { Category, Difficulty, Recipe } from '@/types';
 
-export default function NewRecipePage() {
+export default function EditRecipePage() {
   const router = useRouter();
+  const params = useParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
@@ -28,6 +29,31 @@ export default function NewRecipePage() {
     ingredients: [{ name: '', amount: '', unit: '' }],
     instructions: [''],
   });
+
+  useEffect(() => {
+    fetchRecipe();
+  }, [params.id]);
+
+  const fetchRecipe = async () => {
+    try {
+      const recipe: Recipe = await recipesApi.getOne(params.id as string);
+      setFormData({
+        title: recipe.title,
+        category: recipe.category,
+        difficulty: recipe.difficulty,
+        cookingTime: recipe.cookingTime.toString(),
+        servings: recipe.servings.toString(),
+        ingredients: recipe.ingredients.map((ing) => ({
+          name: ing.name,
+          amount: ing.amount.toString(),
+          unit: ing.unit,
+        })),
+        instructions: recipe.instructions,
+      });
+    } catch (error) {
+      console.error('Error fetching recipe:', error);
+    }
+  };
 
   const addIngredient = () => {
     setFormData({
@@ -70,66 +96,44 @@ export default function NewRecipePage() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError('');
+    e.preventDefault();
+    setError('');
 
-  // Валідація
-  if (formData.ingredients.length === 0 || formData.ingredients.some(ing => !ing.name || !ing.amount || !ing.unit)) {
-    setError('Please fill all ingredient fields');
-    return;
-  }
+    const data = new FormData();
+    data.append('title', formData.title);
+    data.append('category', formData.category);
+    data.append('difficulty', formData.difficulty);
+    data.append('cookingTime', formData.cookingTime);
+    data.append('servings', formData.servings);
+    data.append(
+      'ingredients',
+      JSON.stringify(
+        formData.ingredients.map((ing) => ({
+          name: ing.name,
+          amount: parseInt(ing.amount),
+          unit: ing.unit,
+        }))
+      )
+    );
+    data.append('instructions', JSON.stringify(formData.instructions));
+    if (photo) {
+      data.append('photo', photo);
+    }
 
-  if (formData.instructions.length === 0 || formData.instructions.some(inst => !inst.trim())) {
-    setError('Please fill all instruction fields');
-    return;
-  }
-
-  const data = new FormData();
-  data.append('title', formData.title);
-  data.append('category', formData.category);
-  data.append('difficulty', formData.difficulty);
-  data.append('cookingTime', formData.cookingTime);
-  data.append('servings', formData.servings);
-  
-  const ingredientsJson = formData.ingredients.map(ing => ({
-    name: ing.name,
-    amount: Number(ing.amount),
-    unit: ing.unit,
-  }));
-  data.append('ingredients', JSON.stringify(ingredientsJson));
-  data.append('instructions', JSON.stringify(formData.instructions));
-  
-  if (photo) {
-    data.append('photo', photo);
-  }
-
-  console.log('Sending data:', {
-    title: formData.title,
-    category: formData.category,
-    difficulty: formData.difficulty,
-    cookingTime: formData.cookingTime,
-    servings: formData.servings,
-    ingredients: ingredientsJson,
-    instructions: formData.instructions,
-  });
-
-  setLoading(true);
-  try {
-    await recipesApi.create(data);
-    router.push('/recipes');
-  } catch (err: any) {
-    console.error('Full error:', err);
-    console.error('Response data:', err.response?.data);
-    console.error('Response status:', err.response?.status);
-    setError(err.response?.data?.message || 'Failed to create recipe');
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    try {
+      await recipesApi.update(params.id as string, data);
+      router.push(`/recipes/${params.id}`);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to update recipe');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="container mx-auto p-4 max-w-2xl">
-      <h1 className="text-3xl font-bold mb-6">Create Recipe</h1>
+      <h1 className="text-3xl font-bold mb-6">Edit Recipe</h1>
       <Card>
         <CardBody>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -144,7 +148,7 @@ export default function NewRecipePage() {
 
             <Select
               label="Category"
-              value={formData.category}
+              selectedKeys={[formData.category]}
               onChange={(e) =>
                 setFormData({
                   ...formData,
@@ -162,7 +166,7 @@ export default function NewRecipePage() {
 
             <Select
               label="Difficulty"
-              value={formData.difficulty}
+              selectedKeys={[formData.difficulty]}
               onChange={(e) =>
                 setFormData({
                   ...formData,
@@ -199,7 +203,9 @@ export default function NewRecipePage() {
             />
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Photo</label>
+              <label className="text-sm font-medium mb-2 block">
+                Photo (optional)
+              </label>
               <input
                 type="file"
                 accept="image/*"
@@ -283,7 +289,7 @@ export default function NewRecipePage() {
 
             <div className="flex gap-2">
               <Button type="submit" color="primary" isLoading={loading}>
-                Create Recipe
+                Update Recipe
               </Button>
               <Button variant="flat" onPress={() => router.back()}>
                 Cancel

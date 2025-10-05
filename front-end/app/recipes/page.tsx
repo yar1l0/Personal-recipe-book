@@ -11,6 +11,7 @@ import { useAuthStore } from '@/store/authStore';
 export default function RecipesPage() {
   const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hasHydrated = useAuthStore((state) => state._hasHydrated);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -20,12 +21,14 @@ export default function RecipesPage() {
   });
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (hasHydrated && !isAuthenticated) {
       router.push('/login');
       return;
     }
-    fetchRecipes();
-  }, [filters, isAuthenticated]);
+    if (hasHydrated && isAuthenticated) {
+      fetchRecipes();
+    }
+  }, [filters, isAuthenticated, hasHydrated]);
 
   const fetchRecipes = async () => {
     setLoading(true);
@@ -44,7 +47,13 @@ export default function RecipesPage() {
     }
   };
 
-  if (!isAuthenticated) return null;
+  if (!hasHydrated || !isAuthenticated) {
+    return (
+      <div className="container mx-auto p-4 flex items-center justify-center min-h-screen">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4">
@@ -60,8 +69,11 @@ export default function RecipesPage() {
           label="Category"
           placeholder="All categories"
           className="max-w-xs"
-          value={filters.category}
-          onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+          selectedKeys={filters.category ? [filters.category] : []}
+          onSelectionChange={(keys) => {
+            const value = Array.from(keys)[0] as string;
+            setFilters({ ...filters, category: value || '' });
+          }}
         >
           {Object.values(Category).map((cat) => (
             <SelectItem key={cat} textValue={cat}>
@@ -74,8 +86,11 @@ export default function RecipesPage() {
           label="Difficulty"
           placeholder="All difficulties"
           className="max-w-xs"
-          value={filters.difficulty}
-          onChange={(e) => setFilters({ ...filters, difficulty: e.target.value })}
+          selectedKeys={filters.difficulty ? [filters.difficulty] : []}
+          onSelectionChange={(keys) => {
+            const value = Array.from(keys)[0] as string;
+            setFilters({ ...filters, difficulty: value || '' });
+          }}
         >
           {Object.values(Difficulty).map((diff) => (
             <SelectItem key={diff} textValue={diff}>

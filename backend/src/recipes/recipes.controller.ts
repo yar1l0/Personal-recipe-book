@@ -53,16 +53,31 @@ export class RecipesController {
         }
         cb(null, true);
       },
-      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+      limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )
   create(
     @Req() req,
-    @Body() dto: CreateRecipeDto,
+    @Body('title') title: string,
+    @Body('category') category: string,
+    @Body('difficulty') difficulty: string,
+    @Body('cookingTime') cookingTime: string,
+    @Body('servings') servings: string,
+    @Body('ingredients') ingredients: string,
+    @Body('instructions') instructions: string,
     @UploadedFile() file?: Express.Multer.File,
   ) {
+    const dto = {
+      title,
+      category: category as any,
+      difficulty: difficulty as any,
+      cookingTime: parseInt(cookingTime),
+      servings: parseInt(servings),
+      ingredients: JSON.parse(ingredients),
+      instructions: JSON.parse(instructions),
+    };
     const photo = file ? `uploads/recipes/${file.filename}` : undefined;
-    return this.recipesService.create(req.user.id, dto, photo);
+    return this.recipesService.create(req.user.id, dto as any, photo);
   }
 
   @Put(':id')
@@ -88,9 +103,24 @@ export class RecipesController {
   update(
     @Param('id') id: string,
     @Req() req,
-    @Body() dto: UpdateRecipeDto,
+    @Body('title') title?: string,
+    @Body('category') category?: string,
+    @Body('difficulty') difficulty?: string,
+    @Body('cookingTime') cookingTime?: string,
+    @Body('servings') servings?: string,
+    @Body('ingredients') ingredients?: string,
+    @Body('instructions') instructions?: string,
     @UploadedFile() file?: Express.Multer.File,
   ) {
+    const dto: any = {};
+    if (title) dto.title = title;
+    if (category) dto.category = category;
+    if (difficulty) dto.difficulty = difficulty;
+    if (cookingTime) dto.cookingTime = parseInt(cookingTime);
+    if (servings) dto.servings = parseInt(servings);
+    if (ingredients) dto.ingredients = JSON.parse(ingredients);
+    if (instructions) dto.instructions = JSON.parse(instructions);
+
     const photo = file ? `uploads/recipes/${file.filename}` : undefined;
     return this.recipesService.update(id, req.user.id, dto, photo);
   }
